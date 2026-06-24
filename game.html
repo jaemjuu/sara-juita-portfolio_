@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Game | Sara Juita</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .difficulty-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .diff-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: rgba(245,240,232,0.5);
+      padding: 8px 20px;
+      font-size: 9.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.3s;
+    }
+
+    .diff-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .diff-btn.active { border-color: var(--gold); color: var(--dark); background: var(--gold); }
+
+    .score-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 32px;
+    }
+
+    .score-item {
+      text-align: center;
+    }
+
+    .score-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .score-lbl {
+      font-size: 8.5px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .range-hint {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+
+    @keyframes pulse-gold {
+      0%,100% { box-shadow: 0 0 0 0 rgba(201,169,110,0); }
+      50%      { box-shadow: 0 0 0 8px rgba(201,169,110,0.2); }
+    }
+
+    .shake   { animation: shake 0.4s ease; }
+    .win-pulse { animation: pulse-gold 0.6s ease 2; }
+
+    .max-tries {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">SJ</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="game.html" class="active">Interactive Game</a></li>
+    </ul>
+  </nav>
+
+  <main class="page">
+    <p class="eyebrow">Interactive Game</p>
+    <h1 class="page-title">Guess the <em>Number</em></h1>
+    <div class="gold-divider"></div>
+
+    <div class="game-wrapper">
+      <div class="game-box" id="gameBox">
+
+        <!-- Difficulty -->
+        <div class="difficulty-row">
+          <button class="diff-btn active" onclick="setDifficulty('easy',10,10)">Easy (1–10)</button>
+          <button class="diff-btn" onclick="setDifficulty('medium',50,7)">Medium (1–50)</button>
+          <button class="diff-btn" onclick="setDifficulty('hard',100,5)">Hard (1–100)</button>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="score-row">
+          <div class="score-item">
+            <div class="score-num" id="scoreWins">0</div>
+            <div class="score-lbl">Wins</div>
+          </div>
+          <div class="score-item">
+            <div class="score-num" id="scoreLosses">0</div>
+            <div class="score-lbl">Losses</div>
+          </div>
+          <div class="score-item">
+            <div class="score-num" id="scoreBest">—</div>
+            <div class="score-lbl">Best</div>
+          </div>
+        </div>
+
+        <!-- Prompt -->
+        <p class="game-prompt" id="gamePrompt">
+          I have chosen a number between <strong>1</strong> and <strong id="rangeMax">10</strong>.<br/>
+          Can you guess what it is?
+        </p>
+
+        <p class="range-hint" id="rangeHint">Range: 1 – <span id="hintMax">10</span></p>
+
+        <!-- Input -->
+        <div class="game-input-row">
+          <input
+            type="number"
+            id="guessInput"
+            min="1"
+            max="10"
+            placeholder="?"
+            onkeydown="if(event.key==='Enter') makeGuess()"
+          />
+          <button class="btn-primary" onclick="makeGuess()">Guess</button>
+        </div>
+
+        <div class="game-feedback" id="feedback"></div>
+        <div class="game-attempts" id="attemptsEl">Attempts: 0</div>
+        <div class="max-tries" id="maxTriesEl">Max tries: 10</div>
+
+        <!-- History -->
+        <div class="game-history" id="historySection" style="display:none;">
+          <p>Your guesses</p>
+          <div class="guess-list" id="guessList"></div>
+        </div>
+
+        <!-- Restart -->
+        <div style="margin-top:28px; display:none;" id="restartSection">
+          <button class="btn-outline" onclick="restartGame()">Play Again</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let secretNumber, attempts, guesses, gameOver;
+    let maxRange  = 10;
+    let maxTries  = 10;
+    let wins = 0, losses = 0, best = Infinity;
+
+    function init() {
+      secretNumber = Math.floor(Math.random() * maxRange) + 1;
+      attempts  = 0;
+      guesses   = [];
+      gameOver  = false;
+
+      const input = document.getElementById('guessInput');
+      input.disabled = false;
+      input.value    = '';
+      input.max      = maxRange;
+
+      document.getElementById('feedback').textContent   = '';
+      document.getElementById('feedback').className     = 'game-feedback';
+      document.getElementById('attemptsEl').textContent = 'Attempts: 0';
+      document.getElementById('maxTriesEl').textContent = 'Max tries: ' + maxTries;
+      document.getElementById('guessList').innerHTML    = '';
+      document.getElementById('historySection').style.display = 'none';
+      document.getElementById('restartSection').style.display = 'none';
+      document.getElementById('gamePrompt').innerHTML   =
+        'I have chosen a number between <strong>1</strong> and <strong>' + maxRange + '</strong>.<br/>Can you guess what it is?';
+    }
+
+    function setDifficulty(level, range, tries) {
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      maxRange = range;
+      maxTries = tries;
+      document.getElementById('rangeMax').textContent  = range;
+      document.getElementById('hintMax').textContent   = range;
+      init();
+    }
+
+    function makeGuess() {
+      if (gameOver) return;
+
+      const input    = document.getElementById('guessInput');
+      const feedback = document.getElementById('feedback');
+      const attEl    = document.getElementById('attemptsEl');
+      const history  = document.getElementById('historySection');
+      const list     = document.getElementById('guessList');
+      const restart  = document.getElementById('restartSection');
+      const box      = document.getElementById('gameBox');
+
+      const guess = parseInt(input.value);
+
+      if (isNaN(guess) || guess < 1 || guess > maxRange) {
+        feedback.textContent = 'Enter a number between 1 and ' + maxRange + '.';
+        feedback.className   = 'game-feedback too-high';
+        input.classList.add('shake');
+        setTimeout(() => input.classList.remove('shake'), 400);
+        return;
+      }
+
+      attempts++;
+      guesses.push(guess);
+
+      history.style.display = 'block';
+      list.innerHTML = guesses.map(g =>
+        `<span class="guess-chip">${g}</span>`
+      ).join('');
+
+      attEl.textContent = 'Attempts: ' + attempts;
+      input.value = '';
+
+      if (guess === secretNumber) {
+        // WIN
+        wins++;
+        if (attempts < best) best = attempts;
+        updateScore();
+
+        feedback.textContent = '✦  Correct! The number was ' + secretNumber + '. You got it in ' + attempts + (attempts === 1 ? ' try' : ' tries') + '!';
+        feedback.className   = 'game-feedback correct';
+        document.getElementById('gamePrompt').textContent = 'Well done! 🎉';
+        box.classList.add('win-pulse');
+        setTimeout(() => box.classList.remove('win-pulse'), 1200);
+        restart.style.display = 'block';
+        input.disabled = true;
+        gameOver = true;
+
+      } else if (attempts >= maxTries) {
+        // LOSE
+        losses++;
+        updateScore();
+
+        feedback.textContent = '✦  Out of tries! The number was ' + secretNumber + '.';
+        feedback.className   = 'game-feedback too-high';
+        document.getElementById('gamePrompt').textContent = 'Better luck next time!';
+        restart.style.display = 'block';
+        input.disabled = true;
+        gameOver = true;
+
+      } else {
+        // HINT
+        const remaining = maxTries - attempts;
+        if (guess > secretNumber) {
+          feedback.textContent = 'Too high — try lower. (' + remaining + ' tries left)';
+          feedback.className   = 'game-feedback too-high';
+        } else {
+          feedback.textContent = 'Too low — try higher. (' + remaining + ' tries left)';
+          feedback.className   = 'game-feedback too-low';
+        }
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('scoreWins').textContent   = wins;
+      document.getElementById('scoreLosses').textContent = losses;
+      document.getElementById('scoreBest').textContent   = best === Infinity ? '—' : best;
+    }
+
+    function restartGame() { init(); }
+
+    // Start on load
+    init();
+  </script>
+
+</body>
+</html>

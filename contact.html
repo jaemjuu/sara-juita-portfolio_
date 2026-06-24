@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact | Sara Juita</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .field-error {
+      font-size: 10px;
+      color: #e07070;
+      letter-spacing: 1px;
+      margin-top: 6px;
+      display: none;
+    }
+    .form-group input.invalid,
+    .form-group input.invalid-file {
+      border-color: #e07070 !important;
+    }
+    .form-group.error-group .field-error { display: block; }
+    .gender-error {
+      font-size: 10px;
+      color: #e07070;
+      letter-spacing: 1px;
+      margin-top: 4px;
+      display: none;
+    }
+    .password-strength {
+      margin-top: 8px;
+      display: none;
+    }
+    .strength-bar {
+      height: 3px;
+      border-radius: 2px;
+      transition: width 0.3s, background 0.3s;
+      width: 0%;
+    }
+    .strength-label {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-logo">SJ</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="profile.html">Profile</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="game.html">Interactive Game</a></li>
+    </ul>
+  </nav>
+
+  <main class="page">
+    <p class="eyebrow">Get In Touch</p>
+    <h1 class="page-title">Contact <em>Me</em></h1>
+    <div class="gold-divider"></div>
+
+    <div class="contact-form">
+
+      <div class="form-row">
+        <!-- Full Name -->
+        <div class="form-group" id="grp-fullname">
+          <label for="fullname">Full Name</label>
+          <input type="text" id="fullname" placeholder="Your full name" oninput="clearError('grp-fullname','fullname')"/>
+          <div class="field-error" id="err-fullname">Full name is required.</div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group" id="grp-email">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="your@email.com" oninput="clearError('grp-email','email')"/>
+          <div class="field-error" id="err-email">Please enter a valid email address.</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Password -->
+        <div class="form-group" id="grp-password">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Min. 6 characters" oninput="checkStrength(); clearError('grp-password','password')"/>
+          <div class="field-error" id="err-password">Password must be at least 6 characters.</div>
+          <div class="password-strength" id="strengthBox">
+            <div class="strength-bar" id="strengthBar"></div>
+            <div class="strength-label" id="strengthLabel"></div>
+          </div>
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="form-group" id="grp-dob">
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" onchange="clearError('grp-dob','dob')"/>
+          <div class="field-error" id="err-dob">Date of birth is required.</div>
+        </div>
+      </div>
+
+      <!-- Gender -->
+      <div class="form-group" id="grp-gender">
+        <label>Gender</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gender" value="male" onchange="clearGenderError()"/> Male</label>
+          <label><input type="radio" name="gender" value="female" onchange="clearGenderError()"/> Female</label>
+        </div>
+        <div class="gender-error" id="err-gender">Please select your gender.</div>
+      </div>
+
+      <!-- Profile Photo -->
+      <div class="form-group" id="grp-photo">
+        <label for="photo">Profile Photo</label>
+        <input type="file" id="photo" accept="image/*" onchange="clearError('grp-photo','photo')"/>
+        <div class="field-error" id="err-photo">Please upload a profile photo.</div>
+      </div>
+
+      <!-- Terms -->
+      <div class="form-group" id="grp-terms">
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="terms" onchange="clearTermsError()"/>
+            I agree to the terms and conditions
+          </label>
+        </div>
+        <div class="field-error" id="err-terms" style="margin-top:8px;">You must agree to the terms and conditions.</div>
+      </div>
+
+      <!-- Submit -->
+      <button type="button" class="btn-primary" onclick="handleSubmit()">Submit</button>
+
+      <!-- Success message -->
+      <div class="success-msg" id="successMsg">
+        ✦ &nbsp; Your information has been submitted successfully. Thank you, <span id="submittedName"></span>!
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    /* ── Helpers ── */
+    function showError(grpId, inputId, errId) {
+      document.getElementById(grpId).classList.add('error-group');
+      const input = document.getElementById(inputId);
+      if (input) input.classList.add('invalid');
+      document.getElementById(errId).style.display = 'block';
+    }
+
+    function clearError(grpId, inputId) {
+      document.getElementById(grpId).classList.remove('error-group');
+      const input = document.getElementById(inputId);
+      if (input) input.classList.remove('invalid');
+      const err = document.getElementById('err-' + inputId);
+      if (err) err.style.display = 'none';
+    }
+
+    function clearGenderError() {
+      document.getElementById('err-gender').style.display = 'none';
+    }
+
+    function clearTermsError() {
+      document.getElementById('err-terms').style.display = 'none';
+    }
+
+    /* ── Password strength ── */
+    function checkStrength() {
+      const val = document.getElementById('password').value;
+      const box  = document.getElementById('strengthBox');
+      const bar  = document.getElementById('strengthBar');
+      const lbl  = document.getElementById('strengthLabel');
+
+      if (!val) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+
+      let score = 0;
+      if (val.length >= 6)  score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { label: 'Very Weak', color: '#e07070', width: '20%' },
+        { label: 'Weak',      color: '#e09070', width: '40%' },
+        { label: 'Fair',      color: '#e0c070', width: '60%' },
+        { label: 'Strong',    color: '#90c070', width: '80%' },
+        { label: 'Very Strong', color: var_gold(), width: '100%' },
+      ];
+
+      const lvl = levels[Math.min(score - 1, 4)] || levels[0];
+      bar.style.width      = lvl.width;
+      bar.style.background = lvl.color;
+      lbl.style.color      = lvl.color;
+      lbl.textContent      = lvl.label;
+    }
+
+    function var_gold() { return '#c9a96e'; }
+
+    /* ── Main validation ── */
+    function handleSubmit() {
+      let valid = true;
+
+      // Full name
+      const name = document.getElementById('fullname').value.trim();
+      if (!name) {
+        showError('grp-fullname', 'fullname', 'err-fullname');
+        valid = false;
+      }
+
+      // Email
+      const email = document.getElementById('email').value.trim();
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailPattern.test(email)) {
+        showError('grp-email', 'email', 'err-email');
+        valid = false;
+      }
+
+      // Password
+      const password = document.getElementById('password').value;
+      if (password.length < 6) {
+        showError('grp-password', 'password', 'err-password');
+        valid = false;
+      }
+
+      // Date of birth
+      const dob = document.getElementById('dob').value;
+      if (!dob) {
+        showError('grp-dob', 'dob', 'err-dob');
+        valid = false;
+      }
+
+      // Gender
+      const gender = document.querySelector('input[name="gender"]:checked');
+      if (!gender) {
+        document.getElementById('err-gender').style.display = 'block';
+        valid = false;
+      }
+
+      // Profile photo
+      const photo = document.getElementById('photo');
+      if (!photo.files || photo.files.length === 0) {
+        showError('grp-photo', 'photo', 'err-photo');
+        valid = false;
+      }
+
+      // Terms
+      const terms = document.getElementById('terms').checked;
+      if (!terms) {
+        document.getElementById('err-terms').style.display = 'block';
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      // Success
+      document.getElementById('submittedName').textContent = name;
+      const msg = document.getElementById('successMsg');
+      msg.style.display = 'block';
+      msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Reset form
+      document.getElementById('fullname').value  = '';
+      document.getElementById('email').value     = '';
+      document.getElementById('password').value  = '';
+      document.getElementById('dob').value       = '';
+      document.getElementById('terms').checked   = false;
+      document.getElementById('photo').value     = '';
+      document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);
+      document.getElementById('strengthBox').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
